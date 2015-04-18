@@ -1,0 +1,439 @@
+<?php
+
+/**
+ * @file
+ * A custom quote form for anyone visiting the site to use.
+ */
+
+/**
+ * Implements hook_menu().
+ *
+ * Registers a form-based page that you can access at
+ * "http://localhost/quickquote".
+ */
+function quickquote_menu() {
+  return array(
+    'quickquote' => array(
+      'title' => 'Quick Quote Estimate',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('quickquote_page'),
+      'access arguments' => array('access content'),
+    ),
+  );
+}
+
+/**
+ * A form with a dropdown. Options depend on choice made in previous dropdown.
+ *
+ * On changing the first dropdown, the options in the second are updated.
+ */
+function quickquote_page($form, &$form_state) {
+  // Get the list of options to populate the first dropdown.
+  $options_first = mymodule_first_dropdown_options();
+  // If we have a value for the first dropdown from $form_state['values'] we
+  // use this both as the default value for the first dropdown and also as a
+  // parameter to pass to the function that retrieves the options for the
+  // second dropdown.
+  $value_dropdown_first = isset($form_state['values']['dropdown_first']) ?
+  $form_state['values']['dropdown_first'] : key($options_first);
+  $form['dropdown_first'] = array(
+    '#type' => 'select',
+    '#title' => t('Category'),
+    '#options' => $options_first,
+    '#required' => TRUE,
+    '#default_value' => $value_dropdown_first,
+    // Bind an ajax callback to the change event (which is the default for
+    // the select form type) of the first dropdown. It will replace the second
+    // dropdown when rebuilt.
+    '#ajax' => array(
+    // When 'event' occurs, Drupal will perform an ajax request in the
+    // background. Usually the default value is sufficient (eg. change
+    // for select elements), but valid values include any jQuery event,
+    // most notably 'mousedown', 'blur', and 'submit'.
+      'event' => 'change',
+      'callback' => 'mymodule_ajax_callback',
+      'wrapper' => 'dropdown_second_replace',
+    ),
+  );
+  $form['dropdown_second'] = array(
+    '#type' => 'markup',
+    // The entire enclosing div created here gets replaced when
+    // dropdown_first is changed.
+    '#prefix' => '<div id="dropdown_second_replace">',
+    '#suffix' => '</div>',
+    // When the form is rebuilt during ajax processing, the
+    // $value_dropdown_first variable will now have the new
+    // value and so the options will change.
+  );
+
+  // Logic to determine how the wrapper is built after selecting
+  // from the first dropdown. Note if you have any categories
+  // that you cannot provide an instant quote for, you can
+  // replace the 0 in the if statement below with the information
+  // below (making sure to amend the category name/s), and
+  // the person will receive the message below when selecting
+  // one of these categories. You can add as many categories
+  // as you want, simply by chaining additional categories to
+  // the 'if' conditional.
+  // e.g. if ($form_state['values']['dropdown_first'] == 'Category4' ||
+  // $form_state['values']['dropdown_first'] == 'Category5') {
+  if (0) {
+    $form['dropdown_second']['#markup'] = '<p><font color = "red">' . t('Instant quote currently unavailable for this category. Please <a href="/contact">Contact Us</a> for a quote estimate or formal quote.') . '</font></p>';
+  }
+  else {
+    $form['dropdown_second']['#type'] = 'select';
+    $form['dropdown_second']['#title'] = t('Item');
+    $form['dropdown_second']['#required'] = TRUE;
+    $form['dropdown_second']['#options'] = mymodule_second_dropdown_options($value_dropdown_first);
+  }
+
+  // Form element for inputting number of samples.
+  $form['quantity'] = array(
+    '#title' => t('Quantity'),
+    '#type' => 'textfield',
+    '#maxlength' => 4,
+    '#size' => 4,
+    '#required' => TRUE,
+    '#element_validate' => array('element_validate_integer_positive'),
+    '#description' => t('Please note that the price per item may change depending on the quantity required.'),
+  );
+
+  // Form element for inputting promotion code.
+  $form['promotion_code'] = array(
+    '#title' => t('Promotion Code'),
+    '#type' => 'textfield',
+    '#size' => 12,
+    '#description' => t('If available, please enter valid promotion code.'),
+  );
+
+  // Rendering of submit button.
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+
+  // Rendering of message re seeking a formal quote.
+  $form['help'] = array(
+    '#type' => 'markup',
+    '#markup' => '<p>' . t('Please <a href="/contact">Contact Us</a> if you have any queries and/or would like to receive a formal quote') . '.</p>',
+  );
+  return $form;
+}
+
+/**
+ * Form validation.
+ */
+function quickquote_page_validate($form, &$form_state) {
+  if ($form_state['values']['dropdown_first'] == '-Select-') {
+    form_set_error('dropdown_first', 'You must select a category.');
+  }
+}
+
+/**
+ * Selects just the second dropdown to be returned for re-rendering.
+ *
+ * Since the controlling logic for populating the form is in the form builder
+ * function, all we do here is select the element and return it to be updated.
+ *
+ * return renderable array (the second dropdown)
+ */
+function mymodule_ajax_callback($form, $form_state) {
+  return $form['dropdown_second'];
+}
+
+/**
+ * Helper function to populate the first dropdown.
+ *
+ * This would normally be pulling data from the database.
+ *
+ * return array of options
+ */
+function mymodule_first_dropdown_options() {
+  return array(
+   // Define your categories here. Add or subtract lines as necessary.
+    t('-Select-') => t('-Select-'),
+    t('Category1') => t('Category1'),
+    t('Category2') => t('Category2'),
+    t('Category3') => t('Category3'),
+    t('Category4') => t('Category4'),
+    t('Category5') => t('Category5'),
+    t('Category6') => t('Category6'),
+  );
+}
+
+/**
+ * Helper function to populate the second dropdown.
+ *
+ * This would normally be pulling data from the database.
+ *
+ * This will determine which set of options is returned.
+ *
+ * return array of options
+ */
+function mymodule_second_dropdown_options($key = '') {
+  $options = array(
+   // Define your items here and amend categories to match those defined above.
+   // Add or subtract lines as required.
+    t('Category1') => array(
+      t('1-Item1') => t('1-Item1'),
+      t('1-Item2') => t('1-Item2'),
+      t('1-Item3') => t('1-Item3'),
+      t('1-Item4') => t('1-Item4'),
+      t('1-Item5') => t('1-Item5')),
+    t('Category2') => array(
+      t('2-Item1') => t('2-Item1'),
+      t('2-Item2') => t('2-Item2'),
+      t('2-Item3') => t('2-Item3'),
+      t('2-Item4') => t('2-Item4'),
+      t('2-Item5') => t('2-Item5')),
+    t('Category3') => array(
+      t('3-Item1') => t('3-Item1'),
+      t('3-Item2') => t('3-Item2'),
+      t('3-Item3') => t('3-Item3'),
+      t('3-Item4') => t('3-Item4'),
+      t('3-Item5') => t('3-Item5')),
+    t('Category4') => array(
+      t('4-Item1') => t('4-Item1'),
+      t('4-Item2') => t('4-Item2'),
+      t('4-Item3') => t('4-Item3'),
+      t('4-Item4') => t('4-Item4'),
+      t('4-Item5') => t('4-Item5')),
+    t('Category5') => array(
+      t('5-Item1') => t('5-Item1'),
+      t('5-Item2') => t('5-Item2'),
+      t('5-Item3') => t('5-Item3'),
+      t('5-Item4') => t('5-Item4'),
+      t('5-Item5') => t('5-Item5')),
+    t('Category6') => array(
+      t('6-Item1') => t('6-Item1'),
+      t('6-Item2') => t('6-Item2'),
+      t('6-Item3') => t('6-Item3'),
+      t('6-Item4') => t('6-Item4'),
+      t('6-Item5') => t('6-Item5')),
+  );
+  if (isset($options[$key])) {
+    return $options[$key];
+  }
+  else {
+    return array();
+  }
+}
+
+/**
+ * Form submission.
+ */
+function quickquote_page_submit($form, &$form_state) {
+  // This is where you can enter/change the $rate (i.e. price) variable for
+  // each item. You can amend the category and item names and add/delete as
+  // many items as necessary to match those defined above.
+  if ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item2') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item3') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item4') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item5') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category2' && $form_state['values']['dropdown_second'] === '2-Item1') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category2' && $form_state['values']['dropdown_second'] === '2-Item2') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category2' && $form_state['values']['dropdown_second'] === '2-Item3') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category2' && $form_state['values']['dropdown_second'] === '2-Item4') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category2' && $form_state['values']['dropdown_second'] === '2-Item5') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category3' && $form_state['values']['dropdown_second'] === '3-Item1') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category3' && $form_state['values']['dropdown_second'] === '3-Item2') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category3' && $form_state['values']['dropdown_second'] === '3-Item3') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category3' && $form_state['values']['dropdown_second'] === '3-Item4') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category3' && $form_state['values']['dropdown_second'] === '3-Item5') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category4' && $form_state['values']['dropdown_second'] === '4-Item1') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category4' && $form_state['values']['dropdown_second'] === '4-Item2') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category4' && $form_state['values']['dropdown_second'] === '4-Item3') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category4' && $form_state['values']['dropdown_second'] === '4-Item4') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category4' && $form_state['values']['dropdown_second'] === '4-Item5') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category5' && $form_state['values']['dropdown_second'] === '5-Item1') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category5' && $form_state['values']['dropdown_second'] === '5-Item2') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category5' && $form_state['values']['dropdown_second'] === '5-Item3') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category5' && $form_state['values']['dropdown_second'] === '5-Item4') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category5' && $form_state['values']['dropdown_second'] === '5-Item5') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category6' && $form_state['values']['dropdown_second'] === '6-Item1') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category6' && $form_state['values']['dropdown_second'] === '6-Item2') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category6' && $form_state['values']['dropdown_second'] === '6-Item3') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category6' && $form_state['values']['dropdown_second'] === '6-Item4') {
+    $rate = 1;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category6' && $form_state['values']['dropdown_second'] === '6-Item5') {
+    $rate = 1;
+  }
+
+  // This is where the logic is applied to determine whether an additional
+  // handling fee will apply. This is a flat fee added to the end of the
+  // price calculation, and is represented by the amount (in dollars) which
+  // you set for the $surcharge variable below. The threshold
+  // (i.e. the quantity below which the surcharge will apply) and surcharge
+  // can be set for each individual item. If you wish to use this feature,
+  // simply amend the category name, item name, threshold (2 places to set
+  // per item) and surcharge amounts to suit your requirements. If you
+  // need to add further items, just copy and add another 'elseif' block for
+  // each item and amend as required.
+  // Item-1
+  if ($form_state['values']['quantity'] < 0  && $form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1') {
+    drupal_set_message(t('An additional handling fee applies for quantities below @threshold', array('@threshold' => 0)));
+    $surcharge = 0;
+  }
+  elseif ($form_state['values']['quantity'] < 0 && $form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item2') {
+    drupal_set_message(t('An additional handling fee applies for quantities below @threshold', array('@threshold' => 0)));
+    $surcharge = 0;
+  }
+  else {
+    // Leave this value at 0
+    $surcharge = 0;
+  }
+
+  // This is where you can change the $discount variables that represent
+  // the percentage discount based on the quantity of the item the person
+  // wants. For example, 0.2 represents a discount of 20% off the standard
+  // rate. You can also adjust the quantity ranges the discounts
+  // apply to. If you wish to use this feature for a single item, simply
+  // amend the category name, item name, discounts and quantity ranges to
+  // suit your requirements. If you need to add further items, just copy
+  // and add the code block and amend as required for each item.
+  //
+  // Item-1
+  if ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1' && $form_state['values']['quantity'] <= 100) {
+    $discount = 0.0;
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1' && $form_state['values']['quantity'] >= 101 && $form_state['values']['quantity'] <= 200) {
+    $discount = 0;
+    drupal_set_message(t('A discount of @discount% has been applied to the regular price', array('@discount' => $discount100)));
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1' && $form_state['values']['quantity'] >= 201 && $form_state['values']['quantity'] <= 300) {
+    $discount = 0;
+    drupal_set_message(t('A discount of @discount% has been applied to the regular price', array('@discount' => $discount100)));
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1' && $form_state['values']['quantity'] >= 301  && $form_state['values']['quantity'] <= 400) {
+    $discount = 0;
+    drupal_set_message(t('A discount of @discount% has been applied to the regular price', array('@discount' => $discount100)));
+  }
+  elseif ($form_state['values']['dropdown_first'] === 'Category1' && $form_state['values']['dropdown_second'] === '1-Item1' && $form_state['values']['quantity'] >= 401) {
+    $discount = 0;
+    drupal_set_message(t('A discount of @discount% has been applied to the regular price', array('@discount' => $discount100)));
+  }
+
+  // This is where you can change the promotion code which can be a number
+  // (e.g. 12345) or a string (e.g. 'DISCOUNT'). Is case sensitive.
+  // An expiry date for entering the promotion code has also been included
+  // and which can be changed below.
+  if ($form_state['values']['promotion_code'] == '12345' && strtotime('now') <= strtotime("30 June 2020 23:59:59")) {
+    // This is where you can change the amount of the discount applied when
+    // customers enter the correct promotion code (e.g. 0.2 applies a 20%
+    // discount off the total quote).
+    $promotion = 0.0;
+    drupal_set_message(t("A valid promotion code has been entered and a @promotion% discount has been applied.", array('@promotion' => $promotion * 100)));
+  }
+  elseif ($form_state['values']['promotion_code'] == '') {
+  }
+  else {
+    $promotion = 0;
+    drupal_set_message(t("The promotion code you have entered is not valid."));
+  }
+
+  // This is the calculation of the final price and the message related to it.
+  $quote = (($form_state['values']['quantity']) * ($rate) * (1 - $discount) + $surcharge);
+  $quote = $quote * (1 - $promotion);
+  $cost_per_item = ($quote / $form_state['values']['quantity']);
+  if ($quote <= 0) {
+    drupal_set_message(t('There has been a problem. Please ensure your browser has Javascript enabled'), 'error');
+  }
+  else {
+    drupal_set_message(t("Your estimated quote for @number items of @category (@item) is $@quote. This is a cost of $@cost_per_item per item.", array(
+     '@category' => $form_state['values']['dropdown_first'],
+     '@item' => $form_state['values']['dropdown_second'],
+     '@number' => number_format($form_state['values']['quantity']),
+     '@quote' => number_format($quote, 2, '.', ','),
+     '@cost_per_item' => number_format($cost_per_item, 2, '.', ','),)));
+  }
+
+  // Parameters being fed into drupal_mail function which allows them to be used
+  // in hook_mail.
+  $params = array(
+    '@category' => $form_state['values']['dropdown_first'],
+    '@item' => $form_state['values']['dropdown_second'],
+    '@number' => $form_state['values']['quantity'],
+    '@quote' => $quote,
+    '@promotion' => $promotion,
+  );
+
+  // Calling of drupal_mail function which sends mail to the administrator for
+  // every form submission (i.e. everytime someone requests a quote).
+  // If you wish to use this feature, simply uncomment the single line of code
+  // below and change the email address to the one you wish to use.
+  drupal_mail('quickquote', 'quickquote_email', 'emailname@domain.com', language_default(), $params);
+}
+
+/**
+ * Implements hook_mail().
+ */
+function quickquote_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'quickquote_email':
+      $message['subject'] = t('Quickquote Form Used');
+      $message['body'][] = t("Your estimated quote is $") . number_format($params['@quote'], 2, '.', ',') . '<span> </span>' . t("for") . '<span> </span>' . $params['@category'] . '<span> </span>' . t("(") . $params['@item'] . t(") of") . '<span> </span>' . $params['@number'] . '<span> </span>' . t("items.");
+      $message['body'][] = t("A promotional discount of") . '<span> </span>' . $params['@promotion'] * 100 . t("% was applied to this quote request.");
+      break;
+  }
+}
+
+// To report all errors but not notices.
+error_reporting(E_ALL ^ E_NOTICE);

@@ -1,0 +1,5 @@
+name = Quick Quote
+description = Displays an on-screen instant quote based on the chosen item and quantity.
+package = Custom
+core = 7.x
+files[]=quickquote.module
