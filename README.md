@@ -32,8 +32,30 @@ information for company employees.
 **quickquote email**    
 ![quickquote_email](images/quickquote_email.png)  
 
-## Installation & Instructions 
+## Installation
+In your terminal, navigate to your Drupal site's custom module directory (e.g.
+~/public_html/sites/all/modules/custom). If custom doesn't already exist, just
+create it. Then execute the following:
+```
+git clone https://github.com/rmcculloch/quickquote.git
+```
+Signed in as Admin on your Drupal site, and preferably when the site is in
+administration mode, visit the Modules administration page and enable the
+Quick Quote module (will be under the Custom section).
 
+Visit the quickquote page of your site (e.g. http://mydomain.com/quickquote) and
+check that the basic functionality of the module is working, i.e. you can select the
+default categories/items, enter the quantity and submit the form and get a
+result.
+
+## Configuration
+In your terminal, navigate into the quickquote directory and open the
+quickquote.module file for editing. This is where you edit/enter all the information
+relevant to your situation, i.e. categories, items, prices, surcharge amounts,
+discounts, promotion codes and notification email. The file is well documented,
+so it shouldn't be hard to determine where and how to make the appropriate
+changes. It is recommended to check functionality of the module often when
+making changes as minor errors will break the module/site until corrected.
 
 ## Useful Links
 [Demo page](https://singleversion.com/quickquote_demo)  
@@ -44,7 +66,3 @@ This repository principally exists for use by Single Version Pty Ltd.
 Others are free to use it for any purpose they require. No warranties
 are provided whatsoever; meaning you use quickquote totally at your
 own risk.
-
-
-
-
