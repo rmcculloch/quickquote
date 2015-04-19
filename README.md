@@ -1,5 +1,5 @@
 ## quickquote
-A custom Drupal module that provides an instant price quote for a selected item.
+A custom Drupal 7 module that provides an instant price quote for a selected item.
 
 Written in php using Drupal's Form API, this module provides a form page where a
 category is selected, then an item under that category. The user will then enter
@@ -33,7 +33,7 @@ information for company employees.
 ![quickquote_email](images/quickquote_email.png)  
 
 ## Installation
-In your terminal, navigate to your Drupal site's custom module directory (e.g.
+In your terminal, navigate to your Drupal 7 site's custom module directory (e.g.
 ~/public_html/sites/all/modules/custom). If custom doesn't already exist, just
 create it. Then execute the following:
 ```
