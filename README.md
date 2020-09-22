@@ -57,9 +57,6 @@ so it shouldn't be hard to determine where and how to make the appropriate
 changes. It is recommended to check functionality of the module often when
 making changes as minor errors will break the module/site until corrected.
 
-## Useful Links
-[Demo page](https://singleversion.com/quickquote_demo)  
-
 ## Legal
 This repository principally exists for use by Single Version Pty Ltd.
 Others are free to use it for any purpose they require. No warranties
