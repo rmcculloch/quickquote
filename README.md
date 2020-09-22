@@ -59,7 +59,6 @@ making changes as minor errors will break the module/site until corrected.
 
 ## Useful Links
 [Demo page](https://singleversion.com/quickquote_demo)  
-[Use on a live site](https://invitromics.com.au/quote)  
 
 ## Legal
 This repository principally exists for use by Single Version Pty Ltd.
